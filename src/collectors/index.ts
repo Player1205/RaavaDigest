@@ -31,8 +31,8 @@ export class CollectorRegistry {
 
 export const defaultCollectorRegistry = new CollectorRegistry();
 
+export type { ICollector };
 export {
-  ICollector,
   RssCollector,
   GitHubCollector,
   TmdbCollector,
