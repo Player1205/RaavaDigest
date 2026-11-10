@@ -25,6 +25,7 @@ export class IngestionService {
 
   public async collectAllActiveTracks(): Promise<{
     itemsByTrack: Map<TrackId, RawIngestionItem[]>;
+    rawByTrack: Map<TrackId, RawIngestionItem[]>;
     totalRawCollected: number;
     totalUniqueItems: number;
     totalDuplicatesFiltered: number;
@@ -33,6 +34,7 @@ export class IngestionService {
     const activeTracks = this.buildActiveTracksConfiguration(prefs.activeTracks);
 
     const allRawItems: RawIngestionItem[] = [];
+    const rawByTrack = new Map<TrackId, RawIngestionItem[]>();
 
     // Process all active tracks in parallel
     const trackPromises = activeTracks.map(async (track) => {
@@ -50,7 +52,9 @@ export class IngestionService {
         });
 
       const trackResults = await Promise.all(sourcePromises);
-      return trackResults.flat();
+      const flattened = trackResults.flat();
+      rawByTrack.set(track.id, flattened);
+      return flattened;
     });
 
     const results = await Promise.all(trackPromises);
@@ -71,6 +75,7 @@ export class IngestionService {
 
     return {
       itemsByTrack,
+      rawByTrack,
       totalRawCollected: allRawItems.length,
       totalUniqueItems: unique.length,
       totalDuplicatesFiltered: duplicateCount,

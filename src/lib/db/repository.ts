@@ -250,10 +250,16 @@ export class IntelligenceRepository {
       return initialPrefs;
     }
 
+    const currentEnvEmail = getEnv().NOTIFICATION_EMAIL;
+    const notificationEmail =
+      row.notification_email === "user@example.com" && currentEnvEmail !== "user@example.com"
+        ? currentEnvEmail
+        : row.notification_email;
+
     return {
       activeTracks: JSON.parse(row.active_tracks),
       trackDensities: JSON.parse(row.track_densities),
-      notificationEmail: row.notification_email,
+      notificationEmail,
       deliveryHourUtc: 7,
       isPaused: Boolean(row.is_paused),
       customTopics,

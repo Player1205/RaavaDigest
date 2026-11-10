@@ -11,29 +11,26 @@ import {
 } from "@/types/intelligence";
 import { DEFAULT_CORE_TRACKS } from "@/config/constants";
 import {
-  Activity,
   Bell,
+  Check,
   CheckCircle2,
   ChevronRight,
   Clock,
+  Code2,
   Compass,
-  Cpu,
   Database,
+  ExternalLink,
   Film,
-  Flame,
-  Layers,
   Music,
-  Play,
   Plus,
   RefreshCw,
   Search,
-  Settings,
-  ShieldCheck,
-  Sliders,
+  Send,
+  SlidersHorizontal,
   Sparkles,
   Trash2,
   X,
-  ExternalLink,
+  BookOpen,
 } from "lucide-react";
 
 export default function DashboardPage() {
@@ -100,14 +97,22 @@ export default function DashboardPage() {
     setIsDispatching(true);
     setDispatchResult(null);
     try {
-      const res = await fetch("/api/dispatch", { method: "POST" });
+      // Determine user's preferred density
+      const hasInDepth = preferences && Object.values(preferences.trackDensities).some((d) => d === "in-depth");
+      const targetDensity: DetailDensity = hasInDepth ? "in-depth" : "compact";
+
+      const res = await fetch("/api/dispatch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ density: targetDensity }),
+      });
       const data = (await res.json()) as DispatchRunResult;
       setDispatchResult(data);
       if (data.success) {
-        showToast("Immediate briefing dispatched successfully to inbox!");
+        showToast("Today's digest was dispatched to your inbox!");
         await loadData();
       } else {
-        showToast(`Dispatch completed with note: ${data.error || "Unknown"}`);
+        showToast(`Dispatch note: ${data.error || "Completed"}`);
       }
     } catch (err) {
       showToast("Dispatch request failed.");
@@ -127,9 +132,9 @@ export default function DashboardPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ activeTracks: updatedTracks }),
       });
-      showToast(`Track "${trackId}" updated.`);
+      showToast(`Updated topic settings.`);
     } catch {
-      showToast("Failed to save track update.");
+      showToast("Failed to save changes.");
     }
   };
 
@@ -144,9 +149,9 @@ export default function DashboardPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ trackDensities: updatedDensities }),
       });
-      showToast(`Density updated to ${density} for "${trackId}".`);
+      showToast(`Set to ${density === "in-depth" ? "In-Depth" : "Compact"} mode.`);
     } catch {
-      showToast("Failed to save density update.");
+      showToast("Failed to save density change.");
     }
   };
 
@@ -160,9 +165,9 @@ export default function DashboardPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isPaused: paused }),
       });
-      showToast(paused ? "Daily scheduled delivery paused." : "Daily delivery resumed.");
+      showToast(paused ? "Daily morning dispatch paused." : "Daily morning dispatch resumed.");
     } catch {
-      showToast("Failed to save pause setting.");
+      showToast("Failed to update schedule.");
     }
   };
 
@@ -184,7 +189,7 @@ export default function DashboardPage() {
       const data = await res.json();
       setResolvedCandidate(data.candidate);
     } catch (err) {
-      showToast("Could not resolve topic. Please try another prompt.");
+      showToast("Could not find a feed for this topic. Please try another query.");
     } finally {
       setIsResolving(false);
     }
@@ -201,7 +206,7 @@ export default function DashboardPage() {
       });
 
       if (!res.ok) throw new Error("Failed to add topic");
-      showToast(`Added "${resolvedCandidate.resolvedName}" to active pipeline.`);
+      showToast(`Added "${resolvedCandidate.resolvedName}" to your daily digest.`);
       setResolvedCandidate(null);
       setResolvePrompt("");
       await loadData();
@@ -220,76 +225,76 @@ export default function DashboardPage() {
       showToast("Custom topic removed.");
       await loadData();
     } catch {
-      showToast("Failed to remove custom topic.");
+      showToast("Failed to remove topic.");
     }
   };
 
   const getTrackIcon = (id: string) => {
-    if (id === "tech-ecosystem") return <Cpu className="w-5 h-5 text-indigo-400" />;
-    if (id === "entertainment-hub") return <Film className="w-5 h-5 text-rose-400" />;
-    if (id === "global-music") return <Music className="w-5 h-5 text-emerald-400" />;
-    return <Sparkles className="w-5 h-5 text-cyan-400" />;
+    if (id === "tech-ecosystem") return <Code2 className="w-5 h-5 text-zinc-800" />;
+    if (id === "entertainment-hub") return <Film className="w-5 h-5 text-zinc-800" />;
+    if (id === "global-music") return <Music className="w-5 h-5 text-zinc-800" />;
+    return <Sparkles className="w-5 h-5 text-zinc-800" />;
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
-      {/* Toast Banner */}
+    <div className="min-h-screen flex flex-col bg-[#fcfcfc] text-zinc-900">
+      {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-4 right-4 z-50 bg-indigo-600 text-white px-4 py-2.5 rounded-lg shadow-xl text-sm font-medium flex items-center gap-2 border border-indigo-400/30 animate-in fade-in slide-in-from-top-4">
-          <CheckCircle2 className="w-4 h-4 text-white" />
+        <div className="fixed top-5 right-5 z-50 bg-zinc-900 text-white px-4 py-2.5 rounded-lg shadow-lg text-sm font-medium flex items-center gap-2 border border-zinc-700 animate-in fade-in slide-in-from-top-2">
+          <Check className="w-4 h-4 text-emerald-400" />
           <span>{toastMessage}</span>
         </div>
       )}
 
-      {/* Top Header */}
-      <header className="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-40 px-4 lg:px-8 py-3.5">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+      {/* Modern Editorial Header */}
+      <header className="border-b border-zinc-200/80 bg-white/80 backdrop-blur-md sticky top-0 z-40 px-6 lg:px-12 py-3.5">
+        <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-sky-500 flex items-center justify-center font-black text-white shadow-lg shadow-indigo-500/20">
-              PI
+            <div className="w-8 h-8 rounded-lg bg-zinc-900 flex items-center justify-center font-bold text-white text-sm">
+              R
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-base font-bold tracking-tight text-white">
-                  Personal Intelligence Engine
+                <h1 className="text-base font-semibold tracking-tight text-zinc-900">
+                  Raava Digest
                 </h1>
-                <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-                  SINGLE-USER V1
+                <span className="px-2 py-0.5 text-[11px] font-medium rounded-full bg-zinc-100 text-zinc-600 border border-zinc-200">
+                  Personal Edition
                 </span>
               </div>
-              <p className="text-xs text-slate-400 hidden sm:block">
-                Dedicated Daily Ingestion, Synthesis, & Delivery System
+              <p className="text-xs text-zinc-500 hidden sm:block">
+                Daily morning briefing on tech, movies & music
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-3">
             <button
               onClick={() => togglePause(!preferences?.isPaused)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition border ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition border ${
                 preferences?.isPaused
-                  ? "bg-amber-500/10 border-amber-500/30 text-amber-300 hover:bg-amber-500/20"
-                  : "bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700"
+                  ? "bg-amber-50 border-amber-200 text-amber-800 hover:bg-amber-100"
+                  : "bg-zinc-50 border-zinc-200 text-zinc-700 hover:bg-zinc-100"
               }`}
             >
               <Bell className="w-3.5 h-3.5" />
-              <span>{preferences?.isPaused ? "Deliveries Paused" : "Active (7:00 AM)"}</span>
+              <span>{preferences?.isPaused ? "Paused" : "Daily at 7:00 AM"}</span>
             </button>
 
             <button
               onClick={triggerImmediateDispatch}
               disabled={isDispatching}
-              className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-500 hover:to-sky-500 text-white shadow-md shadow-indigo-600/20 flex items-center gap-1.5 disabled:opacity-50 transition cursor-pointer"
+              className="px-4 py-1.5 rounded-lg text-xs font-semibold bg-zinc-900 hover:bg-zinc-800 text-white shadow-sm flex items-center gap-2 disabled:opacity-50 transition cursor-pointer"
             >
               {isDispatching ? (
                 <>
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  <span>Synthesizing...</span>
+                  <span>Preparing Digest...</span>
                 </>
               ) : (
                 <>
-                  <Play className="w-3.5 h-3.5 fill-current" />
-                  <span>Trigger Immediate Dispatch</span>
+                  <Send className="w-3.5 h-3.5" />
+                  <span>Send Today&apos;s Digest</span>
                 </>
               )}
             </button>
@@ -297,142 +302,153 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      {/* Navigation Tabs */}
-      <nav className="border-b border-slate-800/80 bg-slate-900/40 px-4 lg:px-8">
-        <div className="max-w-7xl mx-auto flex items-center gap-1 sm:gap-6 overflow-x-auto py-2">
+      {/* Understated Tab Navigation */}
+      <nav className="border-b border-zinc-200 bg-white px-6 lg:px-12">
+        <div className="max-w-6xl mx-auto flex items-center gap-6 overflow-x-auto">
           <button
             onClick={() => setActiveTab("briefings")}
-            className={`px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-lg flex items-center gap-2 transition ${
+            className={`py-3 text-sm font-medium border-b-2 flex items-center gap-2 transition ${
               activeTab === "briefings"
-                ? "bg-indigo-600/20 text-indigo-400 border border-indigo-500/30"
-                : "text-slate-400 hover:text-slate-200"
+                ? "border-zinc-900 text-zinc-900 font-semibold"
+                : "border-transparent text-zinc-500 hover:text-zinc-800"
             }`}
           >
-            <Clock className="w-4 h-4" />
-            <span>7-Day Rolling Briefings ({briefings.length})</span>
+            <BookOpen className="w-4 h-4" />
+            <span>Past Issues ({briefings.length})</span>
           </button>
 
           <button
             onClick={() => setActiveTab("tracks")}
-            className={`px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-lg flex items-center gap-2 transition ${
+            className={`py-3 text-sm font-medium border-b-2 flex items-center gap-2 transition ${
               activeTab === "tracks"
-                ? "bg-indigo-600/20 text-indigo-400 border border-indigo-500/30"
-                : "text-slate-400 hover:text-slate-200"
+                ? "border-zinc-900 text-zinc-900 font-semibold"
+                : "border-transparent text-zinc-500 hover:text-zinc-800"
             }`}
           >
-            <Sliders className="w-4 h-4" />
-            <span>Track & Density Controls</span>
+            <SlidersHorizontal className="w-4 h-4" />
+            <span>Topics & Reading Depth</span>
           </button>
 
           <button
             onClick={() => setActiveTab("resolver")}
-            className={`px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-lg flex items-center gap-2 transition ${
+            className={`py-3 text-sm font-medium border-b-2 flex items-center gap-2 transition ${
               activeTab === "resolver"
-                ? "bg-indigo-600/20 text-indigo-400 border border-indigo-500/30"
-                : "text-slate-400 hover:text-slate-200"
+                ? "border-zinc-900 text-zinc-900 font-semibold"
+                : "border-transparent text-zinc-500 hover:text-zinc-800"
             }`}
           >
             <Compass className="w-4 h-4" />
-            <span>AI Topic Discovery</span>
+            <span>Add Custom Feed</span>
           </button>
 
           <button
             onClick={() => setActiveTab("storage")}
-            className={`px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-lg flex items-center gap-2 transition ${
+            className={`py-3 text-sm font-medium border-b-2 flex items-center gap-2 transition ${
               activeTab === "storage"
-                ? "bg-indigo-600/20 text-indigo-400 border border-indigo-500/30"
-                : "text-slate-400 hover:text-slate-200"
+                ? "border-zinc-900 text-zinc-900 font-semibold"
+                : "border-transparent text-zinc-500 hover:text-zinc-800"
             }`}
           >
             <Database className="w-4 h-4" />
-            <span>Storage & TTL Policy</span>
+            <span>Archive & Storage</span>
           </button>
         </div>
       </nav>
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 lg:p-8">
-        {/* Dispatch Feedback Alert if triggered */}
+      <main className="flex-1 max-w-6xl w-full mx-auto p-6 lg:p-10">
+        {/* Dispatch Alert Banner */}
         {dispatchResult && (
           <div
             className={`mb-6 p-4 rounded-xl border flex items-start justify-between gap-4 ${
               dispatchResult.success
-                ? "bg-emerald-950/40 border-emerald-500/40 text-emerald-200"
-                : "bg-rose-950/40 border-rose-500/40 text-rose-200"
+                ? "bg-emerald-50 border-emerald-200 text-emerald-900"
+                : "bg-rose-50 border-rose-200 text-rose-900"
             }`}
           >
             <div>
-              <h4 className="font-bold text-sm flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                {dispatchResult.success ? "Immediate Dispatch Completed" : "Dispatch Note"}
+              <h4 className="font-semibold text-sm flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                {dispatchResult.success ? "Digest Sent Successfully" : "Dispatch Note"}
               </h4>
-              <p className="text-xs text-slate-300 mt-1">
-                Generated {dispatchResult.itemCount || 0} highlights across active tracks. Dispatched to{" "}
-                <strong>{dispatchResult.dispatchedEmail || "user inbox"}</strong> in{" "}
+              <p className="text-xs text-zinc-600 mt-0.5">
+                Curated {dispatchResult.itemCount || 0} highlights. Dispatched to{" "}
+                <strong>{dispatchResult.dispatchedEmail || "your inbox"}</strong> in{" "}
                 {((dispatchResult.durationMs || 0) / 1000).toFixed(1)}s.
-                {dispatchResult.purgedCount !== undefined &&
-                  ` Cleaned up ${dispatchResult.purgedCount} expired records.`}
               </p>
             </div>
             <button
               onClick={() => setDispatchResult(null)}
-              className="text-slate-400 hover:text-white"
+              className="text-zinc-400 hover:text-zinc-700"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
         )}
 
-        {/* TAB 1: 7-DAY ROLLING BRIEFINGS */}
+        {/* TAB 1: PAST ISSUES */}
         {activeTab === "briefings" && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Left Column: Briefings List */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* Left Column: Issues List */}
             <div className="lg:col-span-4 space-y-3">
-              <div className="flex items-center justify-between pb-2">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                  Rolling 7-Day Window
+              <div className="flex items-center justify-between pb-1">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                  Recent Issues
                 </h3>
-                <span className="text-[11px] text-slate-500">Auto-purged after 7 days</span>
+                <span className="text-xs text-zinc-400">7-day archive</span>
               </div>
 
               {isLoading ? (
-                <div className="p-8 text-center text-slate-500 text-sm">
-                  <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-indigo-400" />
-                  Loading briefings...
+                <div className="p-8 text-center text-zinc-400 text-sm">
+                  <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-zinc-500" />
+                  Loading your digests...
                 </div>
               ) : briefings.length === 0 ? (
-                <div className="p-8 bg-slate-900/60 border border-slate-800 rounded-xl text-center">
-                  <Flame className="w-8 h-8 text-indigo-400 mx-auto mb-2 opacity-60" />
-                  <p className="text-sm font-semibold text-slate-300">No briefings recorded yet</p>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Click &quot;Trigger Immediate Dispatch&quot; above to generate your first briefing.
+                <div className="p-8 bg-white border border-zinc-200 rounded-xl text-center shadow-sm">
+                  <BookOpen className="w-8 h-8 text-zinc-400 mx-auto mb-2" />
+                  <p className="text-sm font-semibold text-zinc-800">No issues recorded yet</p>
+                  <p className="text-xs text-zinc-500 mt-1">
+                    Click &quot;Send Today&apos;s Digest&quot; above to generate your first issue.
                   </p>
                 </div>
               ) : (
                 briefings.map((b) => {
                   const isSelected = selectedBriefing?.id === b.id;
+                  const formattedDate = new Date(b.date).toLocaleDateString("en-US", {
+                    weekday: "short",
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  });
+
                   return (
                     <div
                       key={b.id}
                       onClick={() => setSelectedBriefing(b)}
-                      className={`p-4 rounded-xl border cursor-pointer transition ${
+                      className={`p-4 rounded-xl border cursor-pointer transition text-left ${
                         isSelected
-                          ? "bg-indigo-950/30 border-indigo-500/50 shadow-md"
-                          : "bg-slate-900/40 border-slate-800/80 hover:bg-slate-900/80"
+                          ? "bg-white border-zinc-900 shadow-sm ring-1 ring-zinc-900"
+                          : "bg-white border-zinc-200/90 hover:border-zinc-300 shadow-sm"
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-xs font-bold text-sky-400">{b.date}</span>
-                        <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded bg-slate-800 text-slate-400">
-                          {b.density}
+                        <span className="text-xs font-semibold text-zinc-900">{formattedDate}</span>
+                        <span
+                          className={`text-[10px] font-medium uppercase px-2 py-0.5 rounded-full ${
+                            b.density === "in-depth"
+                              ? "bg-amber-50 text-amber-800 border border-amber-200/80"
+                              : "bg-zinc-100 text-zinc-600"
+                          }`}
+                        >
+                          {b.density === "in-depth" ? "In-Depth" : "Compact"}
                         </span>
                       </div>
-                      <h4 className="text-sm font-bold text-slate-100 line-clamp-1">{b.subject}</h4>
-                      <div className="flex items-center justify-between mt-3 text-[11px] text-slate-400">
-                        <span>{b.totalItems} Highlights</span>
-                        <span className="flex items-center gap-1 text-emerald-400">
-                          <CheckCircle2 className="w-3 h-3" />
-                          {b.deliveredStatus}
+                      <h4 className="text-sm font-medium text-zinc-700 line-clamp-1">{b.subject}</h4>
+                      <div className="flex items-center justify-between mt-2.5 text-[11px] text-zinc-500">
+                        <span>{b.totalItems} highlights</span>
+                        <span className="flex items-center gap-1 text-emerald-600 font-medium">
+                          <Check className="w-3 h-3" />
+                          Delivered
                         </span>
                       </div>
                     </div>
@@ -441,54 +457,54 @@ export default function DashboardPage() {
               )}
             </div>
 
-            {/* Right Column: Briefing Detail / HTML Preview */}
+            {/* Right Column: Clean Reading Sheet */}
             <div className="lg:col-span-8">
               {selectedBriefing ? (
-                <div className="bg-slate-900/60 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-                  <div className="p-4 sm:p-6 border-b border-slate-800 flex items-center justify-between">
+                <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm overflow-hidden">
+                  <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/50">
                     <div>
-                      <span className="text-xs font-bold uppercase tracking-wider text-indigo-400">
-                        Dispatched Briefing Preview
-                      </span>
-                      <h2 className="text-lg font-bold text-white mt-0.5">
+                      <h2 className="text-base font-semibold text-zinc-900">
                         {selectedBriefing.subject}
                       </h2>
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        Dispatched: {new Date(selectedBriefing.dispatchedAt).toLocaleString()} • Expires:{" "}
-                        {new Date(selectedBriefing.retentionExpiresAt).toLocaleDateString()}
+                      <p className="text-xs text-zinc-500 mt-0.5">
+                        Dispatched {new Date(selectedBriefing.dispatchedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} &bull; Rolling 7-day archive
                       </p>
                     </div>
-                    <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                      7-Day Retained
+                    <span
+                      className={`text-xs font-medium px-2.5 py-1 rounded-full ${
+                        selectedBriefing.density === "in-depth"
+                          ? "bg-amber-50 text-amber-800 border border-amber-200"
+                          : "bg-zinc-100 text-zinc-700"
+                      }`}
+                    >
+                      {selectedBriefing.density === "in-depth" ? "In-Depth Edition" : "Compact Edition"}
                     </span>
                   </div>
 
-                  <div className="p-4 sm:p-6 bg-slate-950/70 overflow-auto max-h-[700px]">
+                  <div className="p-6 sm:p-10 overflow-auto max-h-[750px] bg-white">
                     <div
-                      className="prose prose-invert max-w-none text-slate-200"
+                      className="max-w-2xl mx-auto"
                       dangerouslySetInnerHTML={{ __html: selectedBriefing.htmlBody }}
                     />
                   </div>
                 </div>
               ) : (
-                <div className="h-full flex items-center justify-center p-12 bg-slate-900/30 border border-dashed border-slate-800 rounded-2xl text-slate-500 text-sm">
-                  Select a past briefing on the left to inspect its synthesized payload.
+                <div className="h-64 flex items-center justify-center p-12 bg-white border border-dashed border-zinc-200 rounded-2xl text-zinc-400 text-sm">
+                  Select an issue on the left to read.
                 </div>
               )}
             </div>
           </div>
         )}
 
-        {/* TAB 2: TRACK & DENSITY CONTROLS */}
+        {/* TAB 2: TOPICS & READING DEPTH */}
         {activeTab === "tracks" && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-              <div>
-                <h3 className="text-base font-bold text-white">Interest Tracks & Density Settings</h3>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Customize which categories are included in daily briefings and their analysis depth.
-                </p>
-              </div>
+          <div className="space-y-6 max-w-4xl">
+            <div>
+              <h3 className="text-lg font-semibold text-zinc-900">Topics & Reading Depth</h3>
+              <p className="text-sm text-zinc-500 mt-1">
+                Customize which subjects appear in your morning digest and adjust their analysis depth.
+              </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -499,11 +515,11 @@ export default function DashboardPage() {
                 return (
                   <div
                     key={track.id}
-                    className="p-5 rounded-2xl bg-slate-900/50 border border-slate-800 hover:border-slate-700/80 transition flex flex-col justify-between"
+                    className="p-5 rounded-2xl bg-white border border-zinc-200 shadow-sm flex flex-col justify-between"
                   >
                     <div>
                       <div className="flex items-start justify-between mb-3">
-                        <div className="p-2.5 rounded-xl bg-slate-800/80 border border-slate-700/50">
+                        <div className="p-2 rounded-xl bg-zinc-100 text-zinc-800">
                           {getTrackIcon(track.id)}
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer">
@@ -513,21 +529,21 @@ export default function DashboardPage() {
                             onChange={(e) => toggleTrack(track.id, e.target.checked)}
                             className="sr-only peer"
                           />
-                          <div className="w-10 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                          <div className="w-10 h-5 bg-zinc-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-zinc-900"></div>
                         </label>
                       </div>
 
-                      <h4 className="text-sm font-bold text-white">{track.name}</h4>
-                      <p className="text-xs text-slate-400 mt-1 line-clamp-2">{track.description}</p>
+                      <h4 className="text-sm font-semibold text-zinc-900">{track.name}</h4>
+                      <p className="text-xs text-zinc-500 mt-1 line-clamp-2">{track.description}</p>
 
-                      <div className="mt-4 pt-3 border-t border-slate-800/80 space-y-1.5">
-                        <span className="text-[11px] font-bold uppercase text-slate-500">
-                          Active Sources ({track.sources.length})
+                      <div className="mt-4 pt-3 border-t border-zinc-100 space-y-1.5">
+                        <span className="text-[11px] font-semibold uppercase text-zinc-400">
+                          Sources ({track.sources.length})
                         </span>
-                        <ul className="text-xs text-slate-300 space-y-1">
+                        <ul className="text-xs text-zinc-600 space-y-1">
                           {track.sources.map((src) => (
                             <li key={src.id} className="flex items-center gap-1.5 truncate">
-                              <span className="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
+                              <span className="w-1.5 h-1.5 rounded-full bg-zinc-400"></span>
                               <span className="truncate">{src.name}</span>
                             </li>
                           ))}
@@ -535,32 +551,37 @@ export default function DashboardPage() {
                       </div>
                     </div>
 
-                    <div className="mt-6 pt-4 border-t border-slate-800">
-                      <span className="text-[11px] font-bold uppercase text-slate-400 block mb-2">
-                        Reading Density
+                    <div className="mt-6 pt-4 border-t border-zinc-100">
+                      <span className="text-[11px] font-semibold uppercase text-zinc-400 block mb-2">
+                        Reading Depth
                       </span>
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-2 gap-2 bg-zinc-100 p-1 rounded-lg">
                         <button
                           onClick={() => changeDensity(track.id, "compact")}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition ${
+                          className={`py-1.5 text-xs font-medium rounded-md transition ${
                             density === "compact"
-                              ? "bg-indigo-600 text-white border-indigo-500"
-                              : "bg-slate-800/60 text-slate-400 border-slate-700 hover:text-white"
+                              ? "bg-white text-zinc-900 shadow-xs font-semibold"
+                              : "text-zinc-600 hover:text-zinc-900"
                           }`}
                         >
                           Compact
                         </button>
                         <button
                           onClick={() => changeDensity(track.id, "in-depth")}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition ${
+                          className={`py-1.5 text-xs font-medium rounded-md transition ${
                             density === "in-depth"
-                              ? "bg-indigo-600 text-white border-indigo-500"
-                              : "bg-slate-800/60 text-slate-400 border-slate-700 hover:text-white"
+                              ? "bg-white text-zinc-900 shadow-xs font-semibold"
+                              : "text-zinc-600 hover:text-zinc-900"
                           }`}
                         >
                           In-Depth
                         </button>
                       </div>
+                      <p className="text-[11px] text-zinc-400 mt-2">
+                        {density === "in-depth"
+                          ? "Rich deep dive: 4–6 bullets with architecture, ratings & context."
+                          : "Quick skim: 2 punchy bullet points per story."}
+                      </p>
                     </div>
                   </div>
                 );
@@ -569,31 +590,31 @@ export default function DashboardPage() {
 
             {/* Custom Topics List */}
             {preferences?.customTopics && preferences.customTopics.length > 0 && (
-              <div className="mt-8">
-                <h4 className="text-sm font-bold uppercase text-slate-400 mb-3">
-                  Dynamic Custom Feeds ({preferences.customTopics.length})
+              <div className="mt-8 pt-6 border-t border-zinc-200">
+                <h4 className="text-sm font-semibold text-zinc-900 mb-3">
+                  Your Custom Feeds ({preferences.customTopics.length})
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {preferences.customTopics.map((ct) => (
                     <div
                       key={ct.id}
-                      className="p-4 rounded-xl bg-slate-900/40 border border-slate-800 flex items-center justify-between"
+                      className="p-4 rounded-xl bg-white border border-zinc-200 shadow-sm flex items-center justify-between"
                     >
                       <div className="flex-1 mr-4">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-sky-400">{ct.resolvedName}</span>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 uppercase">
+                          <span className="text-xs font-semibold text-zinc-900">{ct.resolvedName}</span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-100 text-zinc-500 uppercase font-medium">
                             {ct.sourceType}
                           </span>
                         </div>
-                        <p className="text-xs text-slate-400 mt-1 line-clamp-1">
+                        <p className="text-xs text-zinc-500 mt-1 line-clamp-1">
                           {ct.resolvedDescription}
                         </p>
                         <a
                           href={ct.sourceUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-[11px] text-indigo-400 hover:underline flex items-center gap-1 mt-1 truncate"
+                          className="text-[11px] text-zinc-600 hover:underline flex items-center gap-1 mt-1 truncate"
                         >
                           <span className="truncate">{ct.sourceUrl}</span>
                           <ExternalLink className="w-3 h-3 flex-shrink-0" />
@@ -601,7 +622,7 @@ export default function DashboardPage() {
                       </div>
                       <button
                         onClick={() => deleteCustomTopic(ct.id)}
-                        className="p-2 text-slate-500 hover:text-rose-400 rounded-lg hover:bg-slate-800 transition"
+                        className="p-2 text-zinc-400 hover:text-rose-600 rounded-lg hover:bg-zinc-50 transition"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -613,17 +634,17 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* TAB 3: DYNAMIC TOPIC CONFIGURATION ENGINE */}
+        {/* TAB 3: ADD CUSTOM FEED */}
         {activeTab === "resolver" && (
           <div className="max-w-2xl mx-auto space-y-6">
             <div className="text-center pb-2">
-              <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center mx-auto mb-3">
-                <Compass className="w-6 h-6" />
+              <div className="w-10 h-10 rounded-full bg-zinc-100 text-zinc-800 flex items-center justify-center mx-auto mb-3">
+                <Compass className="w-5 h-5" />
               </div>
-              <h3 className="text-lg font-bold text-white">Dynamic Topic Configuration Engine</h3>
-              <p className="text-xs sm:text-sm text-slate-400 mt-1">
-                Enter any domain or custom interest prompt (e.g., &quot;Formula 1 Racing&quot;, &quot;Autonomous Vehicles&quot;).
-                The AI agent resolves and validates the RSS/API config into your pipeline without breaking templates.
+              <h3 className="text-lg font-semibold text-zinc-900">Add Any Topic or RSS Feed</h3>
+              <p className="text-xs sm:text-sm text-zinc-500 mt-1">
+                Enter any domain or custom interest prompt (e.g., &quot;Formula 1 Racing&quot;, &quot;Rust WebAssembly&quot;, &quot;Electric Aviation&quot;).
+                The engine resolves the best feed and plugs it into your morning briefing.
               </p>
             </div>
 
@@ -633,12 +654,12 @@ export default function DashboardPage() {
                 placeholder="e.g. Formula 1 Racing, Rust WebAssembly, Quantum Physics..."
                 value={resolvePrompt}
                 onChange={(e) => setResolvePrompt(e.target.value)}
-                className="flex-1 px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                className="flex-1 px-4 py-2.5 rounded-xl bg-white border border-zinc-200 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-zinc-900 shadow-sm"
               />
               <button
                 type="submit"
                 disabled={isResolving || !resolvePrompt.trim()}
-                className="px-5 py-2.5 rounded-xl text-sm font-bold bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-50 transition flex items-center gap-2 cursor-pointer"
+                className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-zinc-900 hover:bg-zinc-800 text-white disabled:opacity-50 transition flex items-center gap-2 cursor-pointer shadow-sm"
               >
                 {isResolving ? (
                   <>
@@ -648,92 +669,92 @@ export default function DashboardPage() {
                 ) : (
                   <>
                     <Search className="w-4 h-4" />
-                    <span>Resolve Feed</span>
+                    <span>Find Feed</span>
                   </>
                 )}
               </button>
             </form>
 
             {resolvedCandidate && (
-              <div className="p-5 rounded-2xl bg-indigo-950/20 border border-indigo-500/30 space-y-4 animate-in fade-in">
+              <div className="p-5 rounded-2xl bg-white border border-zinc-200 shadow-sm space-y-4 animate-in fade-in">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
-                    <ShieldCheck className="w-4 h-4" />
-                    Feed Validated & Resolved ({resolvedCandidate.confidence} confidence)
+                  <span className="text-xs font-semibold uppercase tracking-wider text-emerald-700 flex items-center gap-1.5">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    Feed Verified
                   </span>
-                  <span className="text-xs px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-semibold uppercase">
+                  <span className="text-xs px-2 py-0.5 rounded bg-zinc-100 text-zinc-600 font-medium uppercase">
                     {resolvedCandidate.sourceType}
                   </span>
                 </div>
 
                 <div>
-                  <h4 className="text-base font-bold text-white">
+                  <h4 className="text-base font-semibold text-zinc-900">
                     {resolvedCandidate.resolvedName}
                   </h4>
-                  <p className="text-xs text-slate-300 mt-1">
+                  <p className="text-xs text-zinc-500 mt-1">
                     {resolvedCandidate.resolvedDescription}
                   </p>
-                  <p className="text-xs font-mono text-slate-400 mt-2 bg-slate-900/80 p-2 rounded-lg border border-slate-800 break-all">
+                  <p className="text-xs font-mono text-zinc-600 mt-2 bg-zinc-50 p-2 rounded-lg border border-zinc-200 break-all">
                     {resolvedCandidate.sourceUrl}
                   </p>
                 </div>
 
                 <button
                   onClick={addResolvedTopic}
-                  className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition cursor-pointer"
+                  className="w-full py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-semibold shadow-sm flex items-center justify-center gap-2 transition cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
-                  <span>Append to Active Daily Pipeline</span>
+                  <span>Add to Daily Morning Digest</span>
                 </button>
               </div>
             )}
           </div>
         )}
 
-        {/* TAB 4: STORAGE & 7-DAY TTL RETENTION POLICY */}
+        {/* TAB 4: ARCHIVE & STORAGE */}
         {activeTab === "storage" && (
           <div className="max-w-2xl mx-auto space-y-6">
-            <div className="p-6 rounded-2xl bg-slate-900/50 border border-slate-800 space-y-4">
+            <div className="p-6 rounded-2xl bg-white border border-zinc-200 shadow-sm space-y-4">
               <div className="flex items-center gap-3">
-                <div className="p-3 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-                  <Database className="w-6 h-6" />
+                <div className="p-2.5 rounded-xl bg-zinc-100 text-zinc-800">
+                  <Database className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white">
-                    7-Day Rolling Retention Window (TTL Purge)
+                  <h3 className="text-base font-semibold text-zinc-900">
+                    7-Day Rolling Retention Window
                   </h3>
-                  <p className="text-xs text-slate-400">
-                    Automated maintenance permanently caps storage footprint at &lt; 5–10 MB.
+                  <p className="text-xs text-zinc-500">
+                    Automated maintenance keeps local storage featherlight permanently (&lt; 5 MB).
                   </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 pt-3 border-t border-slate-800">
-                <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800/80">
-                  <span className="text-[11px] font-bold uppercase text-slate-500 block">
+              <div className="grid grid-cols-2 gap-4 pt-3 border-t border-zinc-100">
+                <div className="p-4 rounded-xl bg-zinc-50 border border-zinc-200/80">
+                  <span className="text-[11px] font-semibold uppercase text-zinc-400 block">
                     Retention Window
                   </span>
-                  <span className="text-xl font-black text-indigo-400 mt-1 block">7 Days</span>
-                  <span className="text-[11px] text-slate-400">Strict rolling cutoff</span>
+                  <span className="text-xl font-bold text-zinc-900 mt-1 block">7 Days</span>
+                  <span className="text-[11px] text-zinc-500">Automatic rolling cutoff</span>
                 </div>
 
-                <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800/80">
-                  <span className="text-[11px] font-bold uppercase text-slate-500 block">
-                    Database Footprint
+                <div className="p-4 rounded-xl bg-zinc-50 border border-zinc-200/80">
+                  <span className="text-[11px] font-semibold uppercase text-zinc-400 block">
+                    Storage Footprint
                   </span>
-                  <span className="text-xl font-black text-emerald-400 mt-1 block">&lt; 2.5 MB</span>
-                  <span className="text-[11px] text-slate-400">SQLite + WAL Mode</span>
+                  <span className="text-xl font-bold text-zinc-900 mt-1 block">&lt; 3.0 MB</span>
+                  <span className="text-[11px] text-zinc-500">SQLite native database</span>
                 </div>
               </div>
 
-              <div className="p-4 rounded-xl bg-indigo-950/30 border border-indigo-500/20 text-xs text-slate-300 space-y-2">
-                <p className="font-semibold text-indigo-300">
-                  Zero Maintenance Overhead Protocol:
+              <div className="p-4 rounded-xl bg-zinc-50 border border-zinc-200 text-xs text-zinc-600 space-y-2">
+                <p className="font-semibold text-zinc-900">
+                  Zero Maintenance Protocol:
                 </p>
-                <ul className="list-disc list-inside space-y-1 text-slate-400">
-                  <li>Dispatched briefings automatically purge after 168 hours (7 days).</li>
-                  <li>Deduplication hashes retain 7-day memory to eliminate recurring news.</li>
-                  <li>Single-user architecture eliminates multi-tenant database bloat.</li>
+                <ul className="list-disc list-inside space-y-1 text-zinc-500">
+                  <li>Issues automatically purge after 168 hours (7 days).</li>
+                  <li>Deduplication memory prevents seeing the exact same news story twice.</li>
+                  <li>Single-user architecture with zero multi-tenant database overhead.</li>
                 </ul>
               </div>
             </div>
@@ -741,9 +762,9 @@ export default function DashboardPage() {
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-800/80 py-4 px-4 text-center text-xs text-slate-500">
-        Personal Intelligence Engine • Single-User V1 • Built with Next.js, Node.js SQLite & Gemini AI
+      {/* Clean Footer */}
+      <footer className="border-t border-zinc-200 py-4 px-6 text-center text-xs text-zinc-400">
+        Raava Digest &bull; Built with Next.js, Node.js SQLite &amp; Gemini AI
       </footer>
     </div>
   );

@@ -47,6 +47,7 @@ export interface SynthesizedTrackSection {
 export interface SynthesizedHighlight {
   title: string;
   takeaway: string;
+  bullets?: string[];
   details: string;
   sourceName: string;
   sourceUrl: string;

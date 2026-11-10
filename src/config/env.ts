@@ -1,5 +1,14 @@
 import { z } from "zod";
 
+// Automatically load .env file if available (Node 20.6+ / 22+ / 24+)
+if (typeof process.loadEnvFile === "function") {
+  try {
+    process.loadEnvFile();
+  } catch {
+    // .env file might be absent in CI or already loaded by environment
+  }
+}
+
 const envSchema = z.object({
   GEMINI_API_KEY: z.string().optional().default(""),
   RESEND_API_KEY: z.string().optional().default(""),

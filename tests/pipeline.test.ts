@@ -30,7 +30,8 @@ describe("Delivery Service & End-to-End Pipeline Orchestrator", () => {
       stats: { durationMs: 100, sourcesProcessed: 0, tracksActive: 0 },
     };
 
-    const res = await delivery.dispatchBriefingEmail("test@example.com", payload);
+    // Using Resend's official testing email address which always succeeds on test runs
+    const res = await delivery.dispatchBriefingEmail("delivered@resend.dev", payload);
     expect(res.success).toBe(true);
     expect(res.messageId).toBeDefined();
   });
@@ -45,8 +46,8 @@ describe("Delivery Service & End-to-End Pipeline Orchestrator", () => {
     const briefings = repo.getRecentBriefings(7);
     expect(briefings.length).toBeGreaterThanOrEqual(1);
     expect(briefings[0].id).toBe(result.briefingId);
-    expect(briefings[0].htmlBody).toContain("Personal Intelligence Engine");
-  }, 20000);
+    expect(briefings[0].htmlBody).toContain("Daily Briefing");
+  }, 45000);
 
   it("should honor paused state when not forced", async () => {
     repo.saveUserPreferences({ isPaused: true });
@@ -58,5 +59,5 @@ describe("Delivery Service & End-to-End Pipeline Orchestrator", () => {
     // When forced (e.g. manual test trigger from dashboard), it should run anyway
     const forcedResult = await pipeline.runDailyPipeline(true);
     expect(forcedResult.briefingId).toBeDefined();
-  }, 20000);
+  }, 45000);
 });

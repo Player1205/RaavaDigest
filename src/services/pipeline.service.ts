@@ -27,7 +27,7 @@ export class IntelligencePipelineService {
     this.delivery = new DeliveryService();
   }
 
-  public async runDailyPipeline(forced = false): Promise<DispatchRunResult> {
+  public async runDailyPipeline(forced = false, forcedDensity?: DetailDensity): Promise<DispatchRunResult> {
     const startTime = Date.now();
     const prefs = this.repo.getUserPreferences();
 
@@ -44,13 +44,25 @@ export class IntelligencePipelineService {
       const ingestionResult = await this.ingestion.collectAllActiveTracks();
       const activeTrackConfigs = this.ingestion.buildActiveTracksConfiguration(prefs.activeTracks);
 
+      const hasInDepth =
+        forcedDensity === "in-depth" ||
+        Object.values(prefs.trackDensities).some((d) => d === "in-depth");
+      const overallDensity: DetailDensity = forcedDensity || (hasInDepth ? "in-depth" : "compact");
+
       // 2. Synthesize each track using Gemini AI
       const sections: SynthesizedTrackSection[] = [];
       let totalHighlighted = 0;
 
       for (const track of activeTrackConfigs) {
-        const items = ingestionResult.itemsByTrack.get(track.id) || [];
-        const density: DetailDensity = prefs.trackDensities[track.id] || "compact";
+        const density: DetailDensity = forcedDensity || prefs.trackDensities[track.id] || "compact";
+        let items = ingestionResult.itemsByTrack.get(track.id) || [];
+
+        // If today's unique items for this track are empty (e.g. repeated test runs on the same day),
+        // fallback to the most recent items from the collector batch so briefings are NEVER empty!
+        if (items.length === 0) {
+          const sliceCount = density === "in-depth" ? 15 : 6;
+          items = (ingestionResult.rawByTrack.get(track.id) || []).slice(0, sliceCount);
+        }
 
         const section = await this.ai.synthesizeTrack(track.id, track.name, density, items);
         sections.push(section);
@@ -73,7 +85,7 @@ export class IntelligencePipelineService {
         id: briefingId,
         date: todayIsoDate,
         subject,
-        density: "compact",
+        density: overallDensity,
         sections,
         totalRawItemsIngested: ingestionResult.totalRawCollected,
         totalItemsHighlighted: totalHighlighted,
@@ -104,7 +116,7 @@ export class IntelligencePipelineService {
         id: briefingId,
         date: todayIsoDate,
         subject,
-        density: "compact",
+        density: overallDensity,
         totalItems: totalHighlighted,
         htmlBody: payload.htmlBody,
         jsonData: JSON.stringify(payload),

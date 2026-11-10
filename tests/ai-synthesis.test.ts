@@ -91,10 +91,10 @@ describe("Gemini AI Synthesis Engine & Responsive HTML Email Formatter", () => {
 
     const html = emailService.renderEmailHtml(payload);
     expect(html).toContain("<!DOCTYPE html>");
-    expect(html).toContain("Personal Intelligence Engine • V1");
+    expect(html).toContain("Daily Intelligence Briefing");
     expect(html).toContain("Gemini 3.5 Announcement");
-    expect(html).toContain("1-Click Pause Daily Deliveries");
-    expect(html).toContain("Open PWA Control Dashboard");
-    expect(html).toContain("background-color: #0f172a");
+    expect(html).toContain("Pause daily deliveries");
+    expect(html).toContain("Open Dashboard");
+    expect(html).toContain("background-color: #f9fafb");
   });
 });
